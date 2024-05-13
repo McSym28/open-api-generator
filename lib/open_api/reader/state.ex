@@ -173,7 +173,22 @@ defmodule OpenAPI.Reader.State do
     absolute_file = Path.join(state.current_file, relative_file)
     path_segments = String.split(path_string, "/", trim: true)
 
-    {state, {:ref, {absolute_file, path_segments}}}
+    schema = {:ref, {absolute_file, path_segments}}
+    last_ref_path = Map.fetch!(state, :last_ref_path) |> Enum.reverse()
+
+    state =
+      case {last_ref_path, path_segments} do
+        {["components", "schemas", _schema_name], ["components", "schemas", _ref_schema_name]} ->
+          last_ref_file = Map.fetch!(state, :last_ref_file)
+          ref_full_path = {last_ref_file, last_ref_path}
+          schema_specs_by_path = Map.put(state.schema_specs_by_path, ref_full_path, schema)
+          %__MODULE__{state | schema_specs_by_path: schema_specs_by_path}
+
+        _ ->
+          state
+      end
+
+    {state, schema}
   end
 
   def with_schema_ref(state, yaml, decoder) do
