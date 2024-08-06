@@ -383,7 +383,7 @@ defmodule OpenAPI.Renderer.Operation do
     end
   end
 
-  defp render_return_type([], _type_overrides), do: quote(do: :ok)
+  defp render_return_type(_state, []), do: quote(do: :ok)
 
   defp render_return_type(state, responses) do
     %State{implementation: implementation} = state
